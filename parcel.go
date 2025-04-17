@@ -14,13 +14,8 @@ func NewParcelStore(db *sql.DB) ParcelStore {
 }
 
 func (s ParcelStore) Add(p Parcel) (int, error) {
-	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		return 0, err
-	}
-	defer db.Close()
 	// реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
-	res, err := db.Exec("INSERT INTO parcel (number, client, status, address, created_at) VALUES (:number, :client, :status, :address, :created_at)",
+	res, err := s.db.Exec("INSERT INTO parcel (number, client, status, address, created_at) VALUES (:number, :client, :status, :address, :created_at)",
 		sql.Named("number", p.Number),
 		sql.Named("client", p.Client),
 		sql.Named("status", p.Status),
