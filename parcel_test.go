@@ -23,8 +23,8 @@ var (
 // getTestParcel возвращает тестовую посылку
 func getTestParcel() Parcel {
 	return Parcel{
-		Client:    1001,
-		Number:    100,
+		Client:    122,
+		Number:    122,
 		Status:    ParcelStatusRegistered,
 		Address:   "test",
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
@@ -62,7 +62,7 @@ func TestAddGetDelete(t *testing.T) {
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
-	err = store.Delete(int(1000))
+	err = store.Delete(int(number))
 	require.NoError(t, err)
 	_, err = store.Get(int(number))
 	require.Error(t, err)
@@ -115,11 +115,14 @@ func TestSetStatus(t *testing.T) {
 	assert.NotEmpty(t, number)
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
-	err = store.SetStatus(parcel.Number, parcel.Status)
+	newStatus := "alt"
+	err = store.SetStatus(parcel.Number, newStatus)
 	require.NoError(t, err)
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
-
+	p, err := store.Get(parcel.Number)
+	require.NoError(t, err)
+	assert.Equal(t, p.Status, newStatus)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
@@ -150,7 +153,7 @@ func TestGetByClient(t *testing.T) {
 	for i := 0; i < len(parcels); i++ {
 		id, err := store.Add(parsel) // добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 		require.NoError(t, err)
-		assert.NotEmpty(t, id)
+		require.NotEmpty(t, id)
 		// обновляем идентификатор добавленной у посылки
 		parcels[i].Number = int(id)
 
@@ -163,11 +166,12 @@ func TestGetByClient(t *testing.T) {
 	// убедитесь в отсутствии ошибки
 	require.NoError(t, err)
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
-	assert.Equal(t, len(storedParcels), len(parcelMap))
+	//assert.Equal(t, len(storedParcels), len(parcelMap))
+	assert.Len(t, storedParcels, len(parcelMap))
 	// check
 	for _, parcel := range storedParcels {
 		exParcel, err := parcelMap[parsel.Number]
-		require.True(t, err)
+		assert.True(t, err)
 		assert.Equal(t, exParcel, parcel)
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
