@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	//"fmt"
 )
 
 type ParcelStore struct {
@@ -42,7 +42,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	row := s.db.QueryRow("SELECT number, client, status, address, created_at FROM parcel WHERE number")
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		return p, err
+		return Parcel{}, err
 	}
 
 	return p, nil
@@ -103,28 +103,11 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	rows, err := s.db.Query("SELECT status FROM parcel WHERE number = :number", sql.Named("number", number))
+	_, err := s.db.Exec("DELETE FROM parcel WHERE number = :number AND status = :status",
+		sql.Named("number", number),
+		sql.Named("status", ParcelStatusRegistered))
 	if err != nil {
 		return err
 	}
-	statusCheck := Parcel{}
-	for rows.Next() {
-		err = rows.Scan(&statusCheck.Status)
-		if err != nil {
-			return err
-		}
-	}
-
-	if statusCheck.Status == "registered" {
-		_, err := s.db.Exec("DELETE FROM parcel WHERE number = :number", sql.Named("number", number))
-		if err != nil {
-			return err
-		}
-
-	} else {
-		fmt.Println("Неверный статус")
-		return nil
-	}
-
 	return nil
 }
